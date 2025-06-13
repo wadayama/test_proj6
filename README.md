@@ -2,7 +2,7 @@
 
 This project implements a numerical experiment to verify the Central Limit Theorem using Python. The experiment generates sums of uniform random variables and analyzes their distribution to demonstrate the convergence to a normal distribution.
 
-The programgs in the repository was geneted by *Calaude code*. This is a trial for automtic generation of a program for scientific computing.
+The programgs in the repository was geneted by **Claude code**. This is a trial for automatic generation of a program for scientific computing.
 
 ## Overview
 
