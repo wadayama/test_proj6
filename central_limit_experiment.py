@@ -158,14 +158,14 @@ def create_histogram(results: list[float], n: int, m: int, commit_hash: str) -> 
     # Add labels and title
     ax.set_xlabel("Sum of Random Variables")
     ax.set_ylabel("Probability Density")
-    ax.set_title(f"Central Limit Theorem Verification\\nn={n} variables, M={m} trials")
+    ax.set_title(f"Central Limit Theorem Verification\nn={n} variables, M={m} trials")
     ax.legend()
     ax.grid(True, alpha=0.3)
 
     # Add statistics text with commit hash
     stats_text = (
-        f"Experimental: μ={experimental_mean:.3f}, σ={experimental_std:.3f}\\n"
-        f"Theoretical: μ={theoretical_mean:.3f}, σ={theoretical_std:.3f}\\n"
+        f"Experimental: μ={experimental_mean:.3f}, σ={experimental_std:.3f}\n"
+        f"Theoretical: μ={theoretical_mean:.3f}, σ={theoretical_std:.3f}\n"
         f"Git commit: {commit_hash[:8]}"
     )
     ax.text(
