@@ -11,6 +11,7 @@ from matplotlib.figure import Figure
 from central_limit_experiment import (
     calculate_uniform_sum,
     create_histogram,
+    get_git_commit_hash,
     load_config,
     run_experiment,
     save_histogram_pdf,
@@ -72,6 +73,17 @@ class TestRunExperiment:
             assert 0 <= result <= n
 
 
+class TestGetGitCommitHash:
+    """Test cases for get_git_commit_hash function."""
+
+    def test_git_commit_hash_format(self):
+        """Test that git commit hash is returned in expected format."""
+        commit_hash = get_git_commit_hash()
+        # Should return either a valid hash, hash with -dirty, or not-a-git-repo
+        assert isinstance(commit_hash, str)
+        assert len(commit_hash) > 0
+
+
 class TestCreateHistogram:
     """Test cases for create_histogram function."""
 
@@ -79,7 +91,8 @@ class TestCreateHistogram:
         """Test that a matplotlib figure is created."""
         results = [1.0, 2.0, 3.0, 4.0, 5.0]
         n, m = 5, 5
-        figure = create_histogram(results, n, m)
+        commit_hash = "test12345"
+        figure = create_histogram(results, n, m, commit_hash)
         assert isinstance(figure, Figure)
         plt.close(figure)  # Clean up
 
@@ -87,7 +100,8 @@ class TestCreateHistogram:
         """Test that histogram contains expected title."""
         results = [2.5, 3.0, 2.8, 3.2, 2.9]
         n, m = 5, 5
-        figure = create_histogram(results, n, m)
+        commit_hash = "test12345"
+        figure = create_histogram(results, n, m, commit_hash)
 
         # Get the axis and check title
         ax = figure.axes[0]
@@ -177,7 +191,8 @@ class TestIntegration:
         assert all(0 <= result <= n for result in results)
 
         # Create histogram
-        figure = create_histogram(results, n, m)
+        commit_hash = "test12345"
+        figure = create_histogram(results, n, m, commit_hash)
         assert isinstance(figure, Figure)
 
         # Test PDF saving

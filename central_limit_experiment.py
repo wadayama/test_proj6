@@ -6,12 +6,49 @@ by generating sums of uniform random variables and analyzing their distribution.
 """
 
 import logging
+import subprocess
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 from matplotlib.figure import Figure
+
+
+def get_git_commit_hash() -> str:
+    """
+    Get the current Git repository commit hash.
+    If there are uncommitted changes, append '-dirty' to the hash.
+
+    Returns
+    -------
+    str
+        Current commit hash, with '-dirty' suffix if there are uncommitted changes
+    """
+    try:
+        # Get the latest commit hash
+        commit_hash = (
+            subprocess.check_output(["git", "rev-parse", "HEAD"])
+            .strip()
+            .decode("utf-8")
+        )
+
+        # Check for uncommitted changes
+        status = (
+            subprocess.check_output(["git", "status", "--porcelain"])
+            .strip()
+            .decode("utf-8")
+        )
+
+        # If there are uncommitted changes, add '-dirty' suffix
+        if status:
+            return f"{commit_hash}-dirty"
+        else:
+            return commit_hash
+
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # Not a git repository or git command not found
+        return "not-a-git-repo"
 
 
 def calculate_uniform_sum(n: int, seed: int | None = None) -> float:
@@ -66,22 +103,24 @@ def run_experiment(n: int, m: int, base_seed: int = 42) -> list[float]:
     return results
 
 
-def create_histogram(results: list[float], n: int, m: int) -> Figure:
+def create_histogram(results: list[float], n: int, m: int, commit_hash: str) -> Figure:
     """
     Create histogram visualization of the experimental results.
 
     Parameters
     ----------
-    results : List[float]
+    results : list[float]
         List of sum results from trials
     n : int
         Number of random variables summed in each trial
     m : int
         Number of trials performed
+    commit_hash : str
+        Git commit hash for reproducibility tracking
 
     Returns
     -------
-    plt.Figure
+    Figure
         Matplotlib figure containing the histogram
     """
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -122,10 +161,11 @@ def create_histogram(results: list[float], n: int, m: int) -> Figure:
     ax.legend()
     ax.grid(True, alpha=0.3)
 
-    # Add statistics text
+    # Add statistics text with commit hash
     stats_text = (
         f"Experimental: μ={experimental_mean:.3f}, σ={experimental_std:.3f}\\n"
-        f"Theoretical: μ={theoretical_mean:.3f}, σ={theoretical_std:.3f}"
+        f"Theoretical: μ={theoretical_mean:.3f}, σ={theoretical_std:.3f}\\n"
+        f"Git commit: {commit_hash[:8]}"
     )
     ax.text(
         0.02,
@@ -184,6 +224,15 @@ def main() -> None:
         level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
     )
 
+    # Get git commit hash for reproducibility tracking
+    commit_hash = get_git_commit_hash()
+    logging.info(f"Experiment running on git commit: {commit_hash}")
+    if commit_hash.endswith("-dirty"):
+        logging.warning(
+            "Working directory has uncommitted changes. "
+            "Reproducibility might be compromised."
+        )
+
     # Load configuration
     config_path = Path("config/experiment.yaml")
     if config_path.exists():
@@ -207,11 +256,12 @@ def main() -> None:
     # Run the experiment
     results = run_experiment(n, m, base_seed=seed)
 
-    # Create histogram
-    figure = create_histogram(results, n, m)
+    # Create histogram with commit hash
+    figure = create_histogram(results, n, m, commit_hash)
 
-    # Save results
-    output_path = output_dir / f"central_limit_theorem_n{n}_m{m}.pdf"
+    # Save results with commit hash in filename
+    commit_short = commit_hash[:8]
+    output_path = output_dir / f"central_limit_theorem_n{n}_m{m}_{commit_short}.pdf"
     save_histogram_pdf(figure, output_path)
 
     # Display the histogram
