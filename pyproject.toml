@@ -1,0 +1,32 @@
+[project]
+name = "central-limit-theorem-experiment"
+version = "0.1.0"
+description = "Experimental verification of Central Limit Theorem"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "pyyaml"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+    "pyright"
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "UP", "B", "SIM", "I"]
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"

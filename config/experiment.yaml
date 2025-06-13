@@ -1,0 +1,17 @@
+# Central Limit Theorem Experiment Configuration
+
+experiment:
+  # Number of uniform random variables to sum in each trial
+  n: 10
+  
+  # Number of trials to perform
+  m: 1000
+  
+  # Random seed for reproducibility
+  seed: 42
+
+output:
+  # Directory for saving results
+  directory: "outputs"
+  
+  # Output filename format will be: central_limit_theorem_n{n}_m{m}.pdf
