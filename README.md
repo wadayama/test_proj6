@@ -2,6 +2,8 @@
 
 This project implements a numerical experiment to verify the Central Limit Theorem using Python. The experiment generates sums of uniform random variables and analyzes their distribution to demonstrate the convergence to a normal distribution.
 
+The programgs in the repository was geneted by ** Calaude code **. This is a trial for generatic a program for scientific computing.
+
 ## Overview
 
 The Central Limit Theorem states that the sum of a large number of independent random variables approaches a normal distribution, regardless of the underlying distribution of the individual variables. This experiment demonstrates this principle using uniform random variables in the range [0,1].
