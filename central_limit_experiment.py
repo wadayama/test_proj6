@@ -131,7 +131,7 @@ def create_histogram(results: list[float], n: int, m: int, commit_hash: str) -> 
         bins=30,
         density=True,
         alpha=0.7,
-        color="skyblue",
+        color="lightgreen",
         edgecolor="black",
         label="Experimental Data",
     )
