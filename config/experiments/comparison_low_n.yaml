@@ -1,0 +1,16 @@
+# Low n comparison experiment
+# Testing convergence with fewer variables
+
+experiment:
+  # Number of uniform random variables to sum in each trial
+  n: 3
+  
+  # Number of trials to perform
+  m: 2000
+  
+  # Random seed for reproducibility
+  seed: 789
+
+output:
+  # Directory for saving results
+  directory: "outputs"

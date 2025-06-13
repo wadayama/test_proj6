@@ -5,6 +5,7 @@ This module implements an experiment to verify the Central Limit Theorem
 by generating sums of uniform random variables and analyzing their distribution.
 """
 
+import argparse
 import logging
 import subprocess
 from pathlib import Path
@@ -192,7 +193,7 @@ def save_histogram_pdf(figure: Figure, output_path: Path) -> None:
         Path where to save the PDF file
     """
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    figure.savefig(output_path, format="pdf", bbox_inches="tight", dpi=300)
+    figure.savefig(str(output_path), format="pdf", bbox_inches="tight", dpi=300)
     logging.info(f"Histogram saved to {output_path}")
 
 
@@ -215,10 +216,94 @@ def load_config(config_path: Path) -> dict:
     return config
 
 
+def find_config_files(config_dir: Path) -> list[Path]:
+    """
+    Find all YAML configuration files in the specified directory.
+
+    Parameters
+    ----------
+    config_dir : Path
+        Directory to search for configuration files
+
+    Returns
+    -------
+    list[Path]
+        List of YAML configuration file paths
+    """
+    if not config_dir.exists():
+        return []
+
+    yaml_files = list(config_dir.glob("*.yaml")) + list(config_dir.glob("*.yml"))
+    return sorted(yaml_files)
+
+
+def run_single_experiment(config_path: Path) -> None:
+    """
+    Run a single experiment with the given configuration file.
+
+    Parameters
+    ----------
+    config_path : Path
+        Path to the YAML configuration file
+    """
+    logging.info(f"Running experiment with config: {config_path}")
+
+    # Get git commit hash for reproducibility tracking
+    commit_hash = get_git_commit_hash()
+
+    # Load configuration
+    config = load_config(config_path)
+    n = config["experiment"]["n"]
+    m = config["experiment"]["m"]
+    seed = config["experiment"]["seed"]
+    output_dir = Path(config["output"]["directory"])
+
+    logging.info(f"Experiment parameters: n={n}, M={m}, seed={seed}")
+
+    # Run the experiment
+    results = run_experiment(n, m, base_seed=seed)
+
+    # Create histogram with commit hash
+    figure = create_histogram(results, n, m, commit_hash)
+
+    # Save results with commit hash and config name in filename
+    commit_short = commit_hash[:8]
+    config_name = config_path.stem
+    output_path = (
+        output_dir / f"central_limit_theorem_{config_name}_n{n}_m{m}_{commit_short}.pdf"
+    )
+    save_histogram_pdf(figure, output_path)
+
+    # Close the figure to free memory
+    plt.close(figure)
+
+    logging.info(f"Experiment completed: {output_path}")
+
+
 def main() -> None:
     """
     Main function to run the Central Limit Theorem experiment.
     """
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(
+        description="Central Limit Theorem Experimental Verification"
+    )
+    parser.add_argument(
+        "-c", "--config", type=str, help="Path to specific configuration file"
+    )
+    parser.add_argument(
+        "-b",
+        "--batch",
+        action="store_true",
+        help="Run all experiments in config/experiments/ directory",
+    )
+    parser.add_argument(
+        "--show",
+        action="store_true",
+        help="Display histograms (only works with single experiment)",
+    )
+    args = parser.parse_args()
+
     # Set up logging
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -233,41 +318,70 @@ def main() -> None:
             "Reproducibility might be compromised."
         )
 
-    # Load configuration
-    config_path = Path("config/experiment.yaml")
-    if config_path.exists():
-        config = load_config(config_path)
-        n = config["experiment"]["n"]
-        m = config["experiment"]["m"]
-        seed = config["experiment"]["seed"]
-        output_dir = Path(config["output"]["directory"])
+    if args.batch:
+        # Batch mode: run all experiments in config/experiments/ directory
+        experiments_dir = Path("config/experiments")
+        config_files = find_config_files(experiments_dir)
+
+        if not config_files:
+            logging.error(f"No configuration files found in {experiments_dir}")
+            return
+
+        logging.info(f"Found {len(config_files)} configuration files")
+        for config_file in config_files:
+            try:
+                run_single_experiment(config_file)
+            except Exception as e:
+                logging.error(f"Failed to run experiment {config_file}: {e}")
+                continue
+
+        logging.info("All batch experiments completed!")
+
+    elif args.config:
+        # Single config mode
+        config_path = Path(args.config)
+        if not config_path.exists():
+            logging.error(f"Configuration file not found: {config_path}")
+            return
+
+        run_single_experiment(config_path)
+
+        # Display the histogram if requested
+        if args.show:
+            # Re-create and show the last figure
+            config = load_config(config_path)
+            n = config["experiment"]["n"]
+            m = config["experiment"]["m"]
+            seed = config["experiment"]["seed"]
+            results = run_experiment(n, m, base_seed=seed)
+            figure = create_histogram(results, n, m, commit_hash)
+            plt.show()
+            plt.close(figure)
+
     else:
-        # Default parameters if no config file
-        n = 10
-        m = 1000
-        seed = 42
-        output_dir = Path("outputs")
-        logging.warning(
-            f"Config file {config_path} not found. Using default parameters."
-        )
+        # Default mode: use config/experiment.yaml
+        config_path = Path("config/experiment.yaml")
+        if config_path.exists():
+            run_single_experiment(config_path)
 
-    logging.info(f"Starting experiment with n={n}, M={m}, seed={seed}")
+            # Display the histogram by default in single mode
+            config = load_config(config_path)
+            n = config["experiment"]["n"]
+            m = config["experiment"]["m"]
+            seed = config["experiment"]["seed"]
+            results = run_experiment(n, m, base_seed=seed)
+            figure = create_histogram(results, n, m, commit_hash)
+            plt.show()
+            plt.close(figure)
 
-    # Run the experiment
-    results = run_experiment(n, m, base_seed=seed)
+        else:
+            logging.error(
+                f"Default config file {config_path} not found. "
+                "Use -c to specify a config file or -b for batch mode."
+            )
+            return
 
-    # Create histogram with commit hash
-    figure = create_histogram(results, n, m, commit_hash)
-
-    # Save results with commit hash in filename
-    commit_short = commit_hash[:8]
-    output_path = output_dir / f"central_limit_theorem_n{n}_m{m}_{commit_short}.pdf"
-    save_histogram_pdf(figure, output_path)
-
-    # Display the histogram
-    plt.show()
-
-    logging.info("Experiment completed successfully!")
+    logging.info("All experiments completed successfully!")
 
 
 if __name__ == "__main__":

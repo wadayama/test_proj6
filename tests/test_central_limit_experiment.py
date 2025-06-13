@@ -11,9 +11,11 @@ from matplotlib.figure import Figure
 from central_limit_experiment import (
     calculate_uniform_sum,
     create_histogram,
+    find_config_files,
     get_git_commit_hash,
     load_config,
     run_experiment,
+    run_single_experiment,
     save_histogram_pdf,
 )
 
@@ -202,3 +204,74 @@ class TestIntegration:
             assert output_path.exists()
 
         plt.close(figure)  # Clean up
+
+
+class TestFindConfigFiles:
+    """Test cases for find_config_files function."""
+
+    def test_find_yaml_files(self):
+        """Test finding YAML files in a directory."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_dir = Path(temp_dir)
+
+            # Create some test files
+            (config_dir / "config1.yaml").write_text("test: 1")
+            (config_dir / "config2.yml").write_text("test: 2")
+            (config_dir / "not_config.txt").write_text("test: 3")
+
+            found_files = find_config_files(config_dir)
+
+            assert len(found_files) == 2
+            assert any(f.name == "config1.yaml" for f in found_files)
+            assert any(f.name == "config2.yml" for f in found_files)
+            assert not any(f.name == "not_config.txt" for f in found_files)
+
+    def test_empty_directory(self):
+        """Test behavior with empty directory."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_dir = Path(temp_dir)
+            found_files = find_config_files(config_dir)
+            assert found_files == []
+
+    def test_nonexistent_directory(self):
+        """Test behavior with non-existent directory."""
+        nonexistent_dir = Path("/nonexistent/directory")
+        found_files = find_config_files(nonexistent_dir)
+        assert found_files == []
+
+
+class TestRunSingleExperiment:
+    """Test cases for run_single_experiment function."""
+
+    def test_single_experiment_execution(self):
+        """Test that single experiment runs without errors."""
+        config_content = """
+experiment:
+  n: 3
+  m: 5
+  seed: 42
+output:
+  directory: "test_outputs"
+"""
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            f.write(config_content)
+            config_path = Path(f.name)
+
+        try:
+            # This should run without raising an exception
+            run_single_experiment(config_path)
+
+            # Check that output file was created
+            expected_output_dir = Path("test_outputs")
+            if expected_output_dir.exists():
+                pdf_files = list(expected_output_dir.glob("*.pdf"))
+                assert len(pdf_files) > 0
+
+                # Clean up output files
+                for pdf_file in pdf_files:
+                    pdf_file.unlink()
+                expected_output_dir.rmdir()
+
+        finally:
+            config_path.unlink()  # Clean up temp file

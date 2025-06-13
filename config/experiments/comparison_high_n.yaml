@@ -1,0 +1,16 @@
+# High n comparison experiment  
+# Testing convergence with many variables
+
+experiment:
+  # Number of uniform random variables to sum in each trial
+  n: 100
+  
+  # Number of trials to perform
+  m: 2000
+  
+  # Random seed for reproducibility
+  seed: 101112
+
+output:
+  # Directory for saving results
+  directory: "outputs"

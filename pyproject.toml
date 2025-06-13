@@ -9,7 +9,7 @@ dependencies = [
     "pyyaml"
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest",
     "ruff",
@@ -19,6 +19,9 @@ dev = [
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["central_limit_experiment"]
 
 [tool.ruff]
 line-length = 88

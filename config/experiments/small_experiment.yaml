@@ -1,0 +1,16 @@
+# Small-scale experiment for quick testing
+# n=5 variables, 100 trials
+
+experiment:
+  # Number of uniform random variables to sum in each trial
+  n: 5
+  
+  # Number of trials to perform
+  m: 100
+  
+  # Random seed for reproducibility
+  seed: 42
+
+output:
+  # Directory for saving results
+  directory: "outputs"

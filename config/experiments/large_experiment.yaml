@@ -1,0 +1,16 @@
+# Large-scale experiment for detailed analysis
+# n=50 variables, 10000 trials
+
+experiment:
+  # Number of uniform random variables to sum in each trial
+  n: 50
+  
+  # Number of trials to perform
+  m: 10000
+  
+  # Random seed for reproducibility
+  seed: 456
+
+output:
+  # Directory for saving results
+  directory: "outputs"
